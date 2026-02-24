@@ -11,17 +11,23 @@ struct MainView: View {
                 }
                 .tag(0)
             
+            OCRView()
+                .tabItem {
+                    Label("OCR", systemImage: "camera.viewfinder")
+                }
+                .tag(1)
+            
             HistoryView()
                 .tabItem {
                     Label("历史", systemImage: "clock")
                 }
-                .tag(1)
+                .tag(2)
             
             SettingsView()
                 .tabItem {
                     Label("设置", systemImage: "gearshape")
                 }
-                .tag(2)
+                .tag(3)
         }
         .frame(minWidth: 400, minHeight: 500)
     }
