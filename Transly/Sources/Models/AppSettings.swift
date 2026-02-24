@@ -6,12 +6,14 @@ struct AppSettings: Codable, Equatable {
     var autoCopy: Bool
     var showInMenuBar: Bool
     var launchAtLogin: Bool
+    var translationService: TranslationServiceType
     
     static let `default` = AppSettings(
         sourceLanguage: .auto,
         targetLanguage: .chinese,
         autoCopy: true,
         showInMenuBar: true,
-        launchAtLogin: false
+        launchAtLogin: false,
+        translationService: .google
     )
 }

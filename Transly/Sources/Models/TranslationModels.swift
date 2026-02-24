@@ -4,6 +4,7 @@ struct TranslationRequest {
     let text: String
     let sourceLanguage: Language
     let targetLanguage: Language
+    var serviceType: TranslationServiceType = .google
 }
 
 struct TranslationResponse: Codable {

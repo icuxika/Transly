@@ -67,6 +67,27 @@ actor NetworkService {
         }
     }
     
+    func getRaw(url: URL, headers: [String: String]? = nil) async throws -> Data {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        headers?.forEach { key, value in
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        return data
+    }
+    
     func post<T: Decodable>(url: URL, body: Data, headers: [String: String]? = nil) async throws -> T {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

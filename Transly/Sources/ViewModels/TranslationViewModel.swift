@@ -8,6 +8,7 @@ final class TranslationViewModel {
     var translatedText: String = ""
     var sourceLanguage: Language = .auto
     var targetLanguage: Language = .chinese
+    var translationServiceType: TranslationServiceType = .google
     var isTranslating: Bool = false
     var errorMessage: String?
     
@@ -30,7 +31,8 @@ final class TranslationViewModel {
             let result = try await translationService.translate(
                 text: inputText,
                 from: sourceLanguage,
-                to: targetLanguage
+                to: targetLanguage,
+                service: translationServiceType
             )
             translatedText = result
             

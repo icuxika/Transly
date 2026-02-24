@@ -8,6 +8,14 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("翻译设置") {
+                Picker("默认翻译服务", selection: $viewModel.settings.translationService) {
+                    ForEach(TranslationServiceType.availableServices) { service in
+                        VStack(alignment: .leading) {
+                            Text(service.displayName)
+                        }.tag(service)
+                    }
+                }
+                
                 Picker("默认源语言", selection: $viewModel.settings.sourceLanguage) {
                     ForEach(Language.sourceLanguages) { language in
                         Text(language.displayName).tag(language)
@@ -21,6 +29,18 @@ struct SettingsView: View {
                 }
                 
                 Toggle("自动复制翻译结果", isOn: $viewModel.settings.autoCopy)
+            }
+            
+            Section("翻译服务说明") {
+                ForEach(TranslationServiceType.availableServices) { service in
+                    HStack {
+                        Text(service.displayName)
+                        Spacer()
+                        Text(service.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             
             Section("通用") {
@@ -52,13 +72,6 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 
-                HStack {
-                    Text("翻译服务")
-                    Spacer()
-                    Text("MyMemory API")
-                        .foregroundStyle(.secondary)
-                }
-                
                 Link("访问 GitHub", destination: URL(string: "https://github.com")!)
             }
         }
@@ -86,5 +99,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .frame(width: 450, height: 500)
+        .frame(width: 450, height: 550)
 }

@@ -6,6 +6,8 @@ struct TranslationView: View {
     
     var body: some View {
         VStack(spacing: 16) {
+            serviceSelector
+            
             languageSelector
             
             inputSection
@@ -20,6 +22,24 @@ struct TranslationView: View {
             )
         }
         .padding()
+    }
+    
+    private var serviceSelector: some View {
+        HStack {
+            Text("翻译服务")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Spacer()
+            
+            Picker("", selection: $viewModel.translationServiceType) {
+                ForEach(TranslationServiceType.availableServices) { service in
+                    Text(service.displayName).tag(service)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(minWidth: 200)
+        }
     }
     
     private var languageSelector: some View {
@@ -95,5 +115,5 @@ struct TranslationView: View {
 
 #Preview {
     TranslationView()
-        .frame(width: 450, height: 500)
+        .frame(width: 450, height: 550)
 }
