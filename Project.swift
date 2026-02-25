@@ -30,6 +30,7 @@ let project = Project(
                 ],
                 "NSHumanReadableCopyright": "Copyright © 2024 icuxika. All rights reserved.",
                 "LSMinimumSystemVersion": "14.0",
+                "LSUIElement": true,
                 "NSAppleEventsUsageDescription": "Transly needs access to send Apple Events for text selection monitoring.",
                 "NSSystemAdministrationUsageDescription": "Transly needs accessibility permissions to monitor text selections and provide instant translations.",
                 "NSScreenCaptureUsageDescription": "Transly needs screen recording permission to capture screenshots for OCR text recognition.",
