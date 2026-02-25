@@ -29,14 +29,15 @@ echo "✅ ZIP 包已创建: $DIST_DIR/$ZIP_NAME"
 ZIP_SIZE=$(ls -lh "$DIST_DIR/$ZIP_NAME" | awk '{print $5}')
 
 echo ""
+
 echo "📁 创建 DMG 包（支持拖动安装）..."
 
 DMG_TEMP="$DIST_DIR/${APP_NAME}-temp.dmg"
 DMG_VOLUME_NAME="$APP_NAME"
-
 TMP_DIR="$DIST_DIR/dmg_temp"
 rm -rf "$TMP_DIR"
 mkdir -p "$TMP_DIR"
+
 cp -R "build/Release/$APP_NAME.app" "$TMP_DIR/"
 ln -sf /Applications "$TMP_DIR/Applications"
 
@@ -46,10 +47,7 @@ hdiutil create -volname "$DMG_VOLUME_NAME" \
     -ov \
     "$DMG_TEMP"
 
-rm -rf "$TMP_DIR"
-
 DMG_DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "$DMG_TEMP" 2>/dev/null | egrep '^/dev/' | sed 1q | awk '{print $1}')
-
 sleep 2
 
 echo "🎨 配置 DMG 窗口布局..."
@@ -61,8 +59,8 @@ tell application "Finder"
         set current view of container window to icon view
         set toolbar visible of container window to false
         set statusbar visible of container window to false
-        set the bounds of container window to {400, 100, 900, 500}
-        set viewOptions to the icon view options of container window
+        set bounds of container window to {400, 100, 900, 500}
+        set viewOptions to icon view options of container window
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 100
         
@@ -72,21 +70,27 @@ tell application "Finder"
         update without registering applications
         delay 2
     end tell
+    
+    tell disk "$DMG_VOLUME_NAME"
+        close
+    end tell
 end tell
 EOF
 
-sleep 1
+sleep 2
 
 hdiutil detach "$DMG_DEVICE" 2>/dev/null || true
 sleep 2
 
 hdiutil convert "$DMG_TEMP" -format UDZO -imagekey zlib-level=9 -o "$DIST_DIR/$DMG_NAME"
 rm "$DMG_TEMP"
+rm -rf "$TMP_DIR"
 
 echo "✅ DMG 包已创建: $DIST_DIR/$DMG_NAME"
 DMG_SIZE=$(ls -lh "$DIST_DIR/$DMG_NAME" | awk '{print $5}')
 
 echo ""
+
 echo "🎉 打包完成!"
 echo ""
 echo "📦 输出文件:"
