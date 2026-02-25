@@ -4,24 +4,10 @@ actor StorageService {
     static let shared = StorageService()
     
     private let defaults = UserDefaults.standard
-    private let settingsKey = "appSettings"
     private let historyKey = "translationHistory"
     private let maxHistoryCount = 100
     
     private init() {}
-    
-    func loadSettings() -> AppSettings {
-        guard let data = defaults.data(forKey: settingsKey),
-              let settings = try? JSONDecoder().decode(AppSettings.self, from: data) else {
-            return .default
-        }
-        return settings
-    }
-    
-    func saveSettings(_ settings: AppSettings) {
-        guard let data = try? JSONEncoder().encode(settings) else { return }
-        defaults.set(data, forKey: settingsKey)
-    }
     
     func loadHistory() -> [TranslationHistory] {
         guard let data = defaults.data(forKey: historyKey),

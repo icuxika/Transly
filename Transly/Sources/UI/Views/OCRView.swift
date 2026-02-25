@@ -20,8 +20,23 @@ struct OCRView: View {
             }
         }
         .padding()
-        .task {
+        .onAppear {
+            startPermissionMonitoring()
+        }
+    }
+    
+    private func startPermissionMonitoring() {
+        // 立即检查一次权限状态
+        Task {
             hasPermission = await viewModel.hasScreenRecordingPermission
+        }
+        
+        // 每1秒检查一次权限状态
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task {
+                @MainActor in
+                hasPermission = await viewModel.hasScreenRecordingPermission
+            }
         }
     }
     
@@ -62,14 +77,40 @@ struct OCRView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
             
-            Button(action: {
-                Task { await viewModel.captureAndRecognize() }
-            }) {
-                Label("截图识别", systemImage: "camera")
-                    .frame(maxWidth: .infinity)
+            HStack(spacing: 12) {
+                Button(action: {
+                    Task { await viewModel.captureAndRecognize() }
+                }) {
+                    Label("全屏截图", systemImage: "camera")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!hasPermission)
+                
+                Button(action: {
+                    // 显示区域选择视图
+                    let window = NSWindow(
+                        contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
+                        styleMask: [],
+                        backing: .buffered,
+                        defer: false
+                    )
+                    window.isReleasedWhenClosed = false
+                    window.level = .screenSaver
+                    
+                    let contentView = NSHostingView(rootView: RegionSelection(completion: { [self] rect in
+                        Task { await viewModel.captureRegionAndRecognize(rect: rect) }
+                        window.close()
+                    }))
+                    window.contentView = contentView
+                    window.makeKeyAndOrderFront(nil)
+                }) {
+                    Label("区域截图", systemImage: "crop")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!hasPermission)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(!hasPermission)
             
             if !hasPermission {
                 Text("需要屏幕录制权限")
@@ -103,12 +144,37 @@ struct OCRView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             
-            Button("重试") {
-                Task { await viewModel.captureAndRecognize() }
+            HStack(spacing: 12) {
+                Button("重新选择区域") {
+                    showRegionSelection()
+                }
+                .buttonStyle(.bordered)
+                
+                Button("重试上次") {
+                    Task { await viewModel.retry() }
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.bordered)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private func showRegionSelection() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
+            styleMask: [],
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        window.level = .screenSaver
+        
+        let contentView = NSHostingView(rootView: RegionSelection(completion: { rect in
+            Task { await viewModel.captureRegionAndRecognize(rect: rect) }
+            window.close()
+        }))
+        window.contentView = contentView
+        window.makeKeyAndOrderFront(nil)
     }
     
     private var resultView: some View {
@@ -211,7 +277,7 @@ struct OCRView: View {
     private var actionButtons: some View {
         HStack {
             Button("重新截图") {
-                Task { await viewModel.captureAndRecognize() }
+                Task { await viewModel.retry() }
             }
             
             Spacer()

@@ -1,55 +1,29 @@
 import AppKit
 import Foundation
 
-protocol SelectionMonitorDelegate: AnyObject {
-    func selectionMonitor(_ monitor: SelectionMonitor, didDetectSelection text: String, at position: CGPoint)
+enum SelectionResult {
+    case success(String)
+    case noSelection
+}
+
+@objc protocol SelectionMonitorDelegate: AnyObject {
+    @objc optional func selectionMonitor(_ monitor: SelectionMonitor, didDetectSelection text: String, at position: CGPoint)
 }
 
 final class SelectionMonitor: NSObject {
     weak var delegate: SelectionMonitorDelegate?
     
-    private var isMonitoring = false
-    private var lastSelectedText = ""
-    private var monitorTimer: Timer?
-    private let pollingInterval: TimeInterval = 0.2
+    private(set) var lastSelectedText = ""
     
-    private let systemWideElement = AXUIElementCreateSystemWide()
-    
-    func startMonitoring() {
-        guard !isMonitoring else { return }
-        isMonitoring = true
+    func getSelectedTextNow() -> SelectionResult {
+        let result = getSelectedText()
         
-        monitorTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] _ in
-            self?.checkForSelection()
+        if let text = result.text, !text.isEmpty {
+            lastSelectedText = text
+            return .success(text)
         }
         
-        RunLoop.current.add(monitorTimer!, forMode: .common)
-    }
-    
-    func stopMonitoring() {
-        isMonitoring = false
-        monitorTimer?.invalidate()
-        monitorTimer = nil
-    }
-    
-    private func checkForSelection() {
-        let selectedText = getSelectedText()
-        
-        guard let text = selectedText.text,
-              !text.isEmpty,
-              text != lastSelectedText else {
-            return
-        }
-        
-        lastSelectedText = text
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.delegate?.selectionMonitor(
-                self!,
-                didDetectSelection: text,
-                at: selectedText.position
-            )
-        }
+        return .noSelection
     }
     
     private func getSelectedText() -> (text: String?, position: CGPoint) {
@@ -67,7 +41,7 @@ final class SelectionMonitor: NSObject {
         keyUpEvent?.flags = .maskCommand
         keyUpEvent?.post(tap: .cghidEventTap)
         
-        usleep(50000)
+        usleep(100000)
         
         let selectedText = pasteboard.string(forType: .string)
         

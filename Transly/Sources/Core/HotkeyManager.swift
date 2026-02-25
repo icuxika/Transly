@@ -2,8 +2,15 @@ import AppKit
 import Carbon
 import Foundation
 
+enum HotkeyAction {
+    case inputTranslation
+    case selectionTranslation
+    case ocrTranslation
+    case clipboardTranslation
+}
+
 protocol HotkeyManagerDelegate: AnyObject {
-    func hotkeyManagerDidActivate(_ manager: HotkeyManager)
+    func hotkeyManager(_ manager: HotkeyManager, didActivate action: HotkeyAction)
 }
 
 final class HotkeyManager {
@@ -12,10 +19,14 @@ final class HotkeyManager {
     weak var delegate: HotkeyManagerDelegate?
     
     private var eventHandler: EventHandlerRef?
-    private var hotkeyRef: EventHotKeyRef?
+    private var hotkeyRefs: [EventHotKeyRef?] = []
     
-    private let defaultHotkey: UInt32 = UInt32(kVK_ANSI_T)
-    private let defaultModifiers: UInt32 = UInt32(cmdKey | shiftKey)
+    private let hotkeyConfigs: [(action: HotkeyAction, keyCode: UInt32, modifiers: UInt32)] = [
+        (.inputTranslation, UInt32(kVK_ANSI_A), UInt32(optionKey)),
+        (.selectionTranslation, UInt32(kVK_ANSI_D), UInt32(optionKey)),
+        (.ocrTranslation, UInt32(kVK_ANSI_S), UInt32(optionKey)),
+        (.clipboardTranslation, UInt32(kVK_ANSI_V), UInt32(optionKey))
+    ]
     
     private init() {}
     
@@ -30,7 +41,7 @@ final class HotkeyManager {
         let callback: EventHandlerUPP = { _, event, userData -> OSStatus in
             guard let userData = userData else { return OSStatus(eventNotHandledErr) }
             let manager = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
-            manager.handleHotkey()
+            manager.handleHotkeyEvent(event)
             return noErr
         }
         
@@ -47,28 +58,40 @@ final class HotkeyManager {
         
         guard status == noErr else { return false }
         
-        var hotkeyID = EventHotKeyID(
-            signature: OSType(0x54524E53),
-            id: 1
-        )
+        var allRegistered = true
+        for (index, config) in hotkeyConfigs.enumerated() {
+            var hotkeyID = EventHotKeyID(
+                signature: OSType(0x54524E53),
+                id: UInt32(index + 1)
+            )
+            
+            var hotkeyRef: EventHotKeyRef?
+            let registerStatus = RegisterEventHotKey(
+                config.keyCode,
+                config.modifiers,
+                hotkeyID,
+                GetEventDispatcherTarget(),
+                0,
+                &hotkeyRef
+            )
+            
+            if registerStatus == noErr {
+                hotkeyRefs.append(hotkeyRef)
+            } else {
+                allRegistered = false
+            }
+        }
         
-        let registerStatus = RegisterEventHotKey(
-            defaultHotkey,
-            defaultModifiers,
-            hotkeyID,
-            GetEventDispatcherTarget(),
-            0,
-            &hotkeyRef
-        )
-        
-        return registerStatus == noErr
+        return allRegistered
     }
     
     func unregisterHotkey() {
-        if let hotkeyRef = hotkeyRef {
-            UnregisterEventHotKey(hotkeyRef)
-            self.hotkeyRef = nil
+        for hotkeyRef in hotkeyRefs {
+            if let ref = hotkeyRef {
+                UnregisterEventHotKey(ref)
+            }
         }
+        hotkeyRefs.removeAll()
         
         if let eventHandler = eventHandler {
             RemoveEventHandler(eventHandler)
@@ -76,10 +99,28 @@ final class HotkeyManager {
         }
     }
     
-    private func handleHotkey() {
+    private func handleHotkeyEvent(_ event: EventRef?) {
+        var hotkeyID = EventHotKeyID()
+        let status = GetEventParameter(
+            event,
+            EventParamName(kEventParamDirectObject),
+            EventParamType(typeEventHotKeyID),
+            nil,
+            MemoryLayout<EventHotKeyID>.size,
+            nil,
+            &hotkeyID
+        )
+        
+        guard status == noErr else { return }
+        
+        let index = Int(hotkeyID.id) - 1
+        guard index >= 0 && index < hotkeyConfigs.count else { return }
+        
+        let action = hotkeyConfigs[index].action
+        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            self.delegate?.hotkeyManagerDidActivate(self)
+            self.delegate?.hotkeyManager(self, didActivate: action)
         }
     }
     

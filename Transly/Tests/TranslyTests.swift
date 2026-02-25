@@ -38,8 +38,6 @@ struct TranslyTests {
         #expect(settings.sourceLanguage == .auto)
         #expect(settings.targetLanguage == .chinese)
         #expect(settings.autoCopy == true)
-        #expect(settings.showInMenuBar == true)
-        #expect(settings.launchAtLogin == false)
     }
     
 }

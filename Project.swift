@@ -2,6 +2,21 @@ import ProjectDescription
 
 let project = Project(
     name: "Transly",
+    settings: .settings(
+        base: [
+            "PRODUCT_NAME": "$(TARGET_NAME)",
+            "CODE_SIGN_STYLE": "Automatic",
+            "DEVELOPMENT_TEAM": "FG7L2ZUJ37",
+        ],
+        configurations: [
+            .debug(name: .debug, settings: [
+                "CODE_SIGN_IDENTITY": "Apple Development",
+            ]),
+            .release(name: .release, settings: [
+                "CODE_SIGN_IDENTITY": "Apple Development",
+            ])
+        ]
+    ),
     targets: [
         .target(
             name: "Transly",

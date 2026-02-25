@@ -68,3 +68,26 @@ Derived/
 
 ### Tuist managed dependencies ###
 Tuist/.build
+
+### Swift Package Manager ###
+.build/
+Package.resolved
+
+### Build artifacts ###
+dist/
+*.dmg
+*.zip
+*.app
+
+### Temporary files ###
+*.swp
+*.swo
+*~
+
+### IDE ###
+.idea/
+*.xcuserstate
+
+### Project specific ###
+logo1024.png
+spec/

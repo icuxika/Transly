@@ -5,7 +5,7 @@ struct MainView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            TranslationView()
+            InputTranslationView()
                 .tabItem {
                     Label("翻译", systemImage: "character.bubble")
                 }
@@ -22,14 +22,8 @@ struct MainView: View {
                     Label("历史", systemImage: "clock")
                 }
                 .tag(2)
-            
-            SettingsView()
-                .tabItem {
-                    Label("设置", systemImage: "gearshape")
-                }
-                .tag(3)
         }
-        .frame(minWidth: 400, minHeight: 500)
+        .frame(minWidth: 420, minHeight: 500)
     }
 }
 
