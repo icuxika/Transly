@@ -44,30 +44,38 @@ struct MenuBarView: View {
             Button("输入翻译 (⌥A)") {
                 WindowManager.shared.showInputTranslation()
             }
+            .keyboardShortcut("a", modifiers: .command)
+            
             Button("划词翻译 (⌥D)") {
                 WindowManager.shared.showSelectionTranslation()
             }
-            Button("OCR翻译 (⌥S)") {
+            .keyboardShortcut("d", modifiers: .command)
+            
+            Button("截图翻译 (⌥S)") {
                 Task {
                     await WindowManager.shared.showOCRTranslation()
                 }
             }
+            .keyboardShortcut("s", modifiers: .command)
+            
             Button("剪贴翻译 (⌥V)") {
                 WindowManager.shared.showClipboardTranslation()
             }
+            .keyboardShortcut("v", modifiers: .command)
             
             Divider()
             
             Button("打开主窗口") {
                 WindowManager.shared.showMainWindow()
             }
+            
             Button("引导设置") {
                 WindowManager.shared.showSetupGuide()
             }
             
             Divider()
             
-            Button("设置...") {
+            Button("设置") {
                 WindowManager.shared.showSettings()
             }
             
@@ -76,6 +84,7 @@ struct MenuBarView: View {
             Button("退出") {
                 NSApplication.shared.terminate(nil)
             }
+            .keyboardShortcut("q", modifiers: .command)
         }
     }
 }
