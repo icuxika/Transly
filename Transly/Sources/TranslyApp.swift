@@ -1,11 +1,35 @@
 import AppKit
 import SwiftUI
 
+class ApplicationDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { @MainActor in
+            setupHotkey()
+            showInitialWindows()
+        }
+    }
+    
+    @MainActor
+    private func setupHotkey() {
+        HotkeyManager.shared.delegate = HotkeyHandler.shared
+        _ = HotkeyManager.shared.registerHotkey()
+    }
+    
+    @MainActor
+    private func showInitialWindows() {
+        WindowManager.shared.showMainWindow()
+        
+        if !AppConfigService.shared.hasCompletedSetup {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                WindowManager.shared.showSetupGuide()
+            }
+        }
+    }
+}
+
 @main
 struct TranslyApp: App {
-    init() {
-        setupHotkey()
-    }
+    @NSApplicationDelegateAdaptor(ApplicationDelegate.self) var appDelegate
     
     var body: some Scene {
         MenuBarExtra("Transly", systemImage: "character.bubble") {
@@ -14,19 +38,6 @@ struct TranslyApp: App {
         
         Settings {
             EmptyView()
-        }
-    }
-    
-    private func setupHotkey() {
-        HotkeyManager.shared.delegate = HotkeyHandler.shared
-        _ = HotkeyManager.shared.registerHotkey()
-        
-        WindowManager.shared.showMainWindow()
-        
-        if !AppConfigService.shared.hasCompletedSetup {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                WindowManager.shared.showSetupGuide()
-            }
         }
     }
 }

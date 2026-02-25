@@ -11,17 +11,11 @@ struct MainView: View {
                 }
                 .tag(0)
             
-            OCRView()
-                .tabItem {
-                    Label("OCR", systemImage: "camera.viewfinder")
-                }
-                .tag(1)
-            
             HistoryView()
                 .tabItem {
                     Label("历史", systemImage: "clock")
                 }
-                .tag(2)
+                .tag(1)
         }
         .frame(minWidth: 420, minHeight: 500)
     }

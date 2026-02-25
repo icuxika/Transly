@@ -32,7 +32,12 @@ let project = Project(
                 "LSMinimumSystemVersion": "14.0",
                 "NSAppleEventsUsageDescription": "Transly needs access to send Apple Events for text selection monitoring.",
                 "NSSystemAdministrationUsageDescription": "Transly needs accessibility permissions to monitor text selections and provide instant translations.",
-                "NSScreenCaptureUsageDescription": "Transly needs screen recording permission to capture screenshots for OCR text recognition."
+                "NSScreenCaptureUsageDescription": "Transly needs screen recording permission to capture screenshots for OCR text recognition.",
+                "NSApplicationSceneManifest": [
+                    "NSApplicationSupportsMultipleScenes": true,
+                    "NSApplicationSupportsTabbedScene": false,
+                    "UISceneConfigurations": [:]
+                ]
             ]),
             buildableFolders: [
                 "Transly/Sources",
