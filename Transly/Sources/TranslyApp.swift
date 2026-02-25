@@ -670,8 +670,9 @@ struct TranslationServicesSettingsView: View {
     }
     
     private func openLanguageSettings() {
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
-        NSWorkspace.shared.open(url)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Localization") {
+            NSWorkspace.shared.open(url)
+        }
     }
     
     private var deepseekConfigurationSection: some View {
