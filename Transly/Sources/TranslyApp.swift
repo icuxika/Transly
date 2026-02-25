@@ -368,6 +368,8 @@ struct GeneralSettingsView: View {
 struct TranslationServicesSettingsView: View {
     @State private var viewModel = SettingsViewModel()
     @State private var selectedService: TranslationServiceType?
+    @State private var appleLanguageStatuses: [String: String] = [:]
+    @State private var isCheckingAppleLanguages = false
     
     var body: some View {
         HSplitView {
@@ -515,6 +517,71 @@ struct TranslationServicesSettingsView: View {
                     }
                 }
                 
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("语言包状态")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                        
+                        Button {
+                            Task {
+                                await checkAppleLanguageStatuses()
+                            }
+                        } label: {
+                            if isCheckingAppleLanguages {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .frame(width: 16, height: 16)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(isCheckingAppleLanguages)
+                    }
+                    
+                    if appleLanguageStatuses.isEmpty && !isCheckingAppleLanguages {
+                        Button("检查语言包") {
+                            Task {
+                                await checkAppleLanguageStatuses()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    } else {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(appleLanguageStatuses.keys.sorted()), id: \.self) { key in
+                                if let status = appleLanguageStatuses[key] {
+                                    HStack(spacing: 8) {
+                                        let displayName = getLanguagePairDisplayName(key)
+                                        Text(displayName)
+                                            .font(.caption)
+                                        
+                                        Spacer()
+                                        
+                                        Text(status)
+                                            .font(.caption2)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(status == "已安装" ? Color.green.opacity(0.2) : 
+                                                       status == "支持" ? Color.orange.opacity(0.2) : 
+                                                       Color.red.opacity(0.2))
+                                            .foregroundStyle(status == "已安装" ? .green : 
+                                                            status == "支持" ? .orange : .red)
+                                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    }
+                                }
+                            }
+                        }
+                        .padding(12)
+                        .background(.quaternary)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                
                 featuresSection(features: [
                     ("wifi.slash", "离线可用"),
                     ("lock.shield", "隐私保护"),
@@ -537,6 +604,55 @@ struct TranslationServicesSettingsView: View {
                 }
             }
         }
+    }
+    
+    private func checkAppleLanguageStatuses() async {
+        guard #available(macOS 15.0, *) else { return }
+        
+        isCheckingAppleLanguages = true
+        defer { isCheckingAppleLanguages = false }
+        
+        let manager = AppleTranslationManager.shared
+        
+        let commonPairs = [
+            ("en", "zh", "英语 → 中文"),
+            ("zh", "en", "中文 → 英语"),
+            ("ja", "zh", "日语 → 中文"),
+            ("zh", "ja", "中文 → 日语"),
+            ("ko", "zh", "韩语 → 中文"),
+            ("zh", "ko", "中文 → 韩语")
+        ]
+        
+        var statuses: [String: String] = [:]
+        
+        for (source, target, _) in commonPairs {
+            let status = await manager.checkLanguageAvailability(from: source, to: target)
+            let key = "\(source)-\(target)"
+            switch status {
+            case .installed:
+                statuses[key] = "已安装"
+            case .supported:
+                statuses[key] = "支持"
+            case .unsupported:
+                statuses[key] = "不支持"
+            @unknown default:
+                statuses[key] = "未知"
+            }
+        }
+        
+        appleLanguageStatuses = statuses
+    }
+    
+    private func getLanguagePairDisplayName(_ key: String) -> String {
+        let displayNames: [String: String] = [
+            "en-zh": "英语 → 中文",
+            "zh-en": "中文 → 英语",
+            "ja-zh": "日语 → 中文",
+            "zh-ja": "中文 → 日语",
+            "ko-zh": "韩语 → 中文",
+            "zh-ko": "中文 → 韩语"
+        ]
+        return displayNames[key] ?? key
     }
     
     private var deepseekConfigurationSection: some View {

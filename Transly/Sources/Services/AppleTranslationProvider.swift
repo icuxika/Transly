@@ -8,6 +8,9 @@ import SwiftUI
 class AppleTranslationManager: ObservableObject {
     static let shared = AppleTranslationManager()
     
+    @Published var languageStatuses: [String: LanguageAvailability.Status] = [:]
+    @Published var isCheckingLanguages = false
+    
     private init() {}
     
     func translate(text: String, from sourceLanguage: Locale.Language?, to targetLanguage: Locale.Language) async throws -> String {
@@ -53,6 +56,53 @@ class AppleTranslationManager: ObservableObject {
                 windowRef.value?.close()
                 windowRef.value = nil
             }
+        }
+    }
+    
+    func checkLanguageAvailability(from sourceCode: String, to targetCode: String) async -> LanguageAvailability.Status {
+        let availability = LanguageAvailability()
+        let sourceLanguage = Locale.Language(identifier: sourceCode)
+        let targetLanguage = Locale.Language(identifier: targetCode)
+        
+        do {
+            let status = try await availability.status(from: sourceLanguage, to: targetLanguage)
+            let key = "\(sourceCode)-\(targetCode)"
+            languageStatuses[key] = status
+            return status
+        } catch {
+            NSLog("Language availability check error: \(error)")
+            return .unsupported
+        }
+    }
+    
+    func checkAllLanguagePairs() async {
+        isCheckingLanguages = true
+        defer { isCheckingLanguages = false }
+        
+        let commonPairs = [
+            ("en", "zh"),
+            ("zh", "en"),
+            ("ja", "zh"),
+            ("zh", "ja"),
+            ("ko", "zh"),
+            ("zh", "ko"),
+            ("en", "ja"),
+            ("ja", "en")
+        ]
+        
+        for (source, target) in commonPairs {
+            _ = await checkLanguageAvailability(from: source, to: target)
+        }
+    }
+    
+    func getSupportedLanguages() async -> [Locale.Language] {
+        let availability = LanguageAvailability()
+        do {
+            let languages = try await availability.supportedLanguages
+            return languages
+        } catch {
+            NSLog("Get supported languages error: \(error)")
+            return []
         }
     }
 }
