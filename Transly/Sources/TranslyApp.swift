@@ -37,7 +37,7 @@ struct TranslyApp: App {
         }
         
         Settings {
-            EmptyView()
+            SettingsWindowView()
         }
     }
 }
@@ -71,9 +71,10 @@ struct MenuBarView: View {
             
             Divider()
             
-            Button("设置") {
-                WindowManager.shared.showSettings()
+            Button("设置...") {
+                NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
             }
+            .keyboardShortcut(",", modifiers: .command)
             
             Divider()
             

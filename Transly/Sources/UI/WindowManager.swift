@@ -8,7 +8,6 @@ final class WindowManager: ObservableObject {
     
     private var mainWindow: NSWindow?
     private var inputTranslationWindow: NSWindow?
-    private var settingsWindow: NSWindow?
     private var setupGuideWindow: NSWindow?
     
     private let selectionManager = SelectionManager()
@@ -95,7 +94,6 @@ final class WindowManager: ObservableObject {
         
         mainWindow?.orderOut(nil)
         inputTranslationWindow?.orderOut(nil)
-        settingsWindow?.orderOut(nil)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.showRegionSelectionForOCR()
@@ -140,28 +138,6 @@ final class WindowManager: ObservableObject {
             if let window = inputTranslationWindow {
                 window.contentView = NSHostingView(rootView: InputTranslationView(initialText: "", ocrError: true))
             }
-        }
-    }
-    
-    func showSettings() {
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        
-        if settingsWindow == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 500, height: 450),
-                styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "设置"
-            window.isReleasedWhenClosed = false
-            settingsWindow = window
-        }
-        
-        if let window = settingsWindow {
-            window.contentView = NSHostingView(rootView: SettingsWindowView())
-            window.center()
-            window.makeKeyAndOrderFront(nil)
         }
     }
     
