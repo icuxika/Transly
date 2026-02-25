@@ -9,56 +9,69 @@ struct SetupGuideView: View {
     private let selectionManager = SelectionManager()
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("引导设置")
-                .font(.title)
-                .fontWeight(.bold)
+        VStack(spacing: 24) {
+            headerSection
             
-            Text("Transly 需要以下权限才能正常工作：")
-                .font(.headline)
+            permissionsSection
             
-            VStack(alignment: .leading, spacing: 20) {
-                PermissionItem(
-                    title: "辅助功能权限",
-                    description: "用于监听和获取选中的文本，实现划词翻译功能",
-                    isGranted: $hasAccessibilityPermission,
-                    onRequest: requestAccessibilityPermission,
-                    onOpenSettings: openAccessibilitySettings
-                )
-                
-                PermissionItem(
-                    title: "屏幕录制权限",
-                    description: "用于 OCR 翻译功能，捕获屏幕上的文本",
-                    isGranted: $hasScreenRecordingPermission,
-                    onRequest: requestScreenRecordingPermission,
-                    onOpenSettings: openScreenRecordingSettings
-                )
-            }
-            .padding()
-            .background(Color.secondary.opacity(0.05))
-            .cornerRadius(10)
-            
-            Text("权限状态会实时更新，当您在系统设置中修改权限时，此处会立即反映最新状态。")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            HStack {
-                Button("刷新权限状态") {
-                    refreshPermissionStatus()
-                }
-                .buttonStyle(.bordered)
-                
-                Button("完成设置") {
-                    onComplete()
-                }
-                .buttonStyle(.borderedProminent)
-            }
+            actionButtonsSection
         }
         .padding(30)
-        .frame(width: 500, height: 450)
+        .frame(width: 480, height: 380)
         .onAppear {
             updatePermissionStatus()
-            startPermissionMonitoring()
+        }
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "shield.checkered")
+                .font(.system(size: 40))
+                .foregroundStyle(.blue)
+            
+            Text("引导设置")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("Transly 需要以下权限才能正常工作")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+    
+    private var permissionsSection: some View {
+        VStack(spacing: 16) {
+            PermissionItem(
+                title: "辅助功能权限",
+                description: "用于监听和获取选中的文本，实现划词翻译功能",
+                isGranted: $hasAccessibilityPermission,
+                onRequest: requestAccessibilityPermission,
+                onOpenSettings: openAccessibilitySettings
+            )
+            
+            PermissionItem(
+                title: "屏幕录制权限",
+                description: "用于 OCR 翻译功能，捕获屏幕上的文本",
+                isGranted: $hasScreenRecordingPermission,
+                onRequest: requestScreenRecordingPermission,
+                onOpenSettings: openScreenRecordingSettings
+            )
+        }
+    }
+    
+    private var actionButtonsSection: some View {
+        HStack(spacing: 12) {
+            Button("刷新状态") {
+                refreshPermissionStatus()
+            }
+            .buttonStyle(.bordered)
+            
+            Spacer()
+            
+            Button("完成设置") {
+                onComplete()
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
     
@@ -70,14 +83,6 @@ struct SetupGuideView: View {
             let screenPermission = await screenshotCapture.checkScreenRecordingPermission()
             await MainActor.run {
                 hasScreenRecordingPermission = screenPermission
-            }
-        }
-    }
-    
-    private func startPermissionMonitoring() {
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            Task { @MainActor in
-                updatePermissionStatus()
             }
         }
     }
@@ -124,37 +129,43 @@ struct PermissionItem: View {
     let onOpenSettings: () -> Void
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: isGranted ? "checkmark.circle.fill" : "circle")
+        HStack(spacing: 16) {
+            Image(systemName: isGranted ? "checkmark.circle.fill" : "circle.dashed")
                 .font(.title2)
-                .foregroundColor(isGranted ? .green : .secondary)
-                .frame(width: 24)
+                .foregroundStyle(isGranted ? .green : .orange)
+                .frame(width: 28)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                 
                 Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                
-                HStack(spacing: 8) {
-                    Button(isGranted ? "已授权" : "授予权限") {
-                        if !isGranted {
-                            onRequest()
-                        }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+                Button(isGranted ? "已授权" : "授权") {
+                    if !isGranted {
+                        onRequest()
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(isGranted)
-                    
-                    Button("打开系统设置") {
-                        onOpenSettings()
-                    }
-                    .buttonStyle(.bordered)
                 }
+                .buttonStyle(.bordered)
+                .disabled(isGranted)
+                .controlSize(.small)
+                
+                Button("设置") {
+                    onOpenSettings()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
         }
+        .padding(16)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

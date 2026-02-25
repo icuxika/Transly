@@ -375,7 +375,7 @@ struct TranslationServicesSettingsView: View {
                 .frame(minWidth: 180, maxWidth: 220)
             
             serviceConfigurationView
-                .frame(minWidth: 280, maxWidth: .infinity)
+                .frame(minWidth: 320, maxWidth: .infinity)
         }
         .task {
             if selectedService == nil {
@@ -412,14 +412,12 @@ struct TranslationServicesSettingsView: View {
     private var serviceConfigurationView: some View {
         ScrollView {
             if let service = selectedService {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 24) {
                     serviceHeaderSection(for: service)
-                    
-                    Divider()
                     
                     serviceConfigurationSection(for: service)
                 }
-                .padding(20)
+                .padding(24)
             } else {
                 VStack {
                     Spacer()
@@ -436,7 +434,7 @@ struct TranslationServicesSettingsView: View {
     @ViewBuilder
     private func serviceHeaderSection(for service: TranslationServiceType) -> some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(service.displayName)
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -454,17 +452,11 @@ struct TranslationServicesSettingsView: View {
             ))
             .toggleStyle(.switch)
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     @ViewBuilder
     private func serviceConfigurationSection(for service: TranslationServiceType) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("配置")
-                .font(.headline)
-            
+        VStack(alignment: .leading, spacing: 20) {
             switch service {
             case .google:
                 googleConfigurationSection
@@ -481,263 +473,311 @@ struct TranslationServicesSettingsView: View {
     }
     
     private var googleConfigurationSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                Text("无需配置，开箱即用")
-                    .font(.subheadline)
+        VStack(alignment: .leading, spacing: 16) {
+            configurationCard {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("无需配置")
+                            .font(.headline)
+                        Text("开箱即用，无需 API Key")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("特点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("免费使用", systemImage: "gift")
-                    Label("无需 API Key", systemImage: "key.slash")
-                    Label("支持多种语言", systemImage: "globe")
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            featuresSection(features: [
+                ("gift", "免费使用"),
+                ("key.slash", "无需 API Key"),
+                ("globe", "支持多种语言")
+            ])
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var appleConfigurationSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             if #available(macOS 15.0, *) {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text("系统原生翻译，已就绪")
-                        .font(.subheadline)
+                configurationCard {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.green)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("系统原生翻译")
+                                .font(.headline)
+                            Text("已就绪，无需额外配置")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("特点")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Label("离线可用", systemImage: "wifi.slash")
-                        Label("隐私保护", systemImage: "lock.shield")
-                        Label("系统级集成", systemImage: "app.badge.checkmark")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
+                featuresSection(features: [
+                    ("wifi.slash", "离线可用"),
+                    ("lock.shield", "隐私保护"),
+                    ("app.badge.checkmark", "系统级集成")
+                ])
             } else {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
+                configurationCard {
+                    HStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.title3)
                             .foregroundStyle(.orange)
-                        Text("需要 macOS 15.0 或更高版本")
-                            .font(.subheadline)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("系统版本不满足")
+                                .font(.headline)
+                            Text("需要 macOS 15.0 或更高版本")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    
-                    Text("当前系统版本不支持 Apple 翻译功能")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
-                .padding(12)
-                .background(Color.orange.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var deepseekConfigurationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("API Key")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                SecureField("输入 DeepSeek API Key", text: $viewModel.deepSeekAPIKey)
-                    .textFieldStyle(.roundedBorder)
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.blue)
+            configurationCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("API Key")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                     
-                    Link("获取 DeepSeek API Key", destination: URL(string: "https://platform.deepseek.com/")!)
-                        .font(.caption)
+                    SecureField("输入 DeepSeek API Key", text: $viewModel.deepSeekAPIKey)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    HStack(spacing: 6) {
+                        Image(systemName: "link")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        Link("获取 DeepSeek API Key", destination: URL(string: "https://platform.deepseek.com/")!)
+                            .font(.caption)
+                    }
                 }
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("特点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("高质量翻译", systemImage: "sparkles")
-                    Label("支持上下文理解", systemImage: "text.bubble")
-                    Label("性价比高", systemImage: "dollarsign.circle")
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            featuresSection(features: [
+                ("sparkles", "高质量翻译"),
+                ("text.bubble", "支持上下文理解"),
+                ("dollarsign.circle", "性价比高")
+            ])
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var openaiConfigurationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("API Key")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                SecureField("输入 OpenAI API Key", text: Binding(
-                    get: { AppConfigService.shared.openAIAPIKey },
-                    set: { AppConfigService.shared.openAIAPIKey = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.blue)
+            configurationCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("API Key")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        SecureField("输入 OpenAI API Key", text: Binding(
+                            get: { AppConfigService.shared.openAIAPIKey },
+                            set: { AppConfigService.shared.openAIAPIKey = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                        
+                        HStack(spacing: 6) {
+                            Image(systemName: "link")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                            Link("获取 OpenAI API Key", destination: URL(string: "https://platform.openai.com/api-keys")!)
+                                .font(.caption)
+                        }
+                    }
                     
-                    Link("获取 OpenAI API Key", destination: URL(string: "https://platform.openai.com/api-keys")!)
-                        .font(.caption)
+                    Divider()
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("API 端点")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("默认值可用")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        
+                        TextField("输入 API 端点", text: Binding(
+                            get: { AppConfigService.shared.openAIEndpoint },
+                            set: { AppConfigService.shared.openAIEndpoint = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("模型名称")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("默认: \(TranslationServiceType.openai.defaultModel)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        
+                        TextField("输入模型名称", text: Binding(
+                            get: { AppConfigService.shared.openAIModel },
+                            set: { AppConfigService.shared.openAIModel = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    }
                 }
             }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("API 端点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                TextField("输入 API 端点", text: Binding(
-                    get: { AppConfigService.shared.openAIEndpoint },
-                    set: { AppConfigService.shared.openAIEndpoint = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                
-                Text("默认: \(TranslationServiceType.openai.defaultEndpoint)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                Text("可修改为兼容 OpenAI 接口的第三方服务地址")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("模型名称")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                TextField("输入模型名称", text: Binding(
-                    get: { AppConfigService.shared.openAIModel },
-                    set: { AppConfigService.shared.openAIModel = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                
-                Text("默认: \(TranslationServiceType.openai.defaultModel)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("特点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("强大的语言理解能力", systemImage: "brain")
-                    Label("支持自定义端点", systemImage: "network")
-                    Label("支持多种模型", systemImage: "cpu")
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            featuresSection(features: [
+                ("brain", "强大的语言理解能力"),
+                ("network", "支持自定义端点"),
+                ("cpu", "支持多种模型")
+            ])
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var ollamaConfigurationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("API 端点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                TextField("输入 Ollama 端点", text: Binding(
-                    get: { AppConfigService.shared.ollamaEndpoint },
-                    set: { AppConfigService.shared.ollamaEndpoint = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                
-                Text("默认: \(TranslationServiceType.ollama.defaultEndpoint)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("模型名称")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                TextField("输入模型名称", text: Binding(
-                    get: { AppConfigService.shared.ollamaModel },
-                    set: { AppConfigService.shared.ollamaModel = $0 }
-                ))
-                .textFieldStyle(.roundedBorder)
-                
-                Text("默认: \(TranslationServiceType.ollama.defaultModel)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.blue)
+            configurationCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("API 端点")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("默认值可用")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        
+                        TextField("输入 Ollama 端点", text: Binding(
+                            get: { AppConfigService.shared.ollamaEndpoint },
+                            set: { AppConfigService.shared.ollamaEndpoint = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    }
                     
-                    Text("确保 Ollama 服务正在运行")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("模型名称")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("默认: \(TranslationServiceType.ollama.defaultModel)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        
+                        TextField("输入模型名称", text: Binding(
+                            get: { AppConfigService.shared.ollamaModel },
+                            set: { AppConfigService.shared.ollamaModel = $0 }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    Divider()
+                    
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.blue)
+                        Text("确保 Ollama 服务正在运行")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Link("Ollama 官网", destination: URL(string: "https://ollama.ai/")!)
+                            .font(.caption)
+                    }
                 }
-                
-                Link("访问 Ollama 官网", destination: URL(string: "https://ollama.ai/")!)
-                    .font(.caption)
             }
-            .padding(12)
-            .background(Color.blue.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("特点")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Label("完全本地运行", systemImage: "house")
-                    Label("隐私安全", systemImage: "lock.shield")
-                    Label("无需网络", systemImage: "wifi.slash")
-                    Label("支持多种开源模型", systemImage: "cube.box")
-                }
-                .font(.caption)
+            featuresSection(features: [
+                ("house", "完全本地运行"),
+                ("lock.shield", "隐私安全"),
+                ("wifi.slash", "无需网络"),
+                ("cube.box", "支持多种开源模型")
+            ])
+        }
+    }
+    
+    private func configurationCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .padding(16)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+    
+    private func featuresSection(features: [(String, String)]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("特点")
+                .font(.subheadline)
+                .fontWeight(.medium)
                 .foregroundStyle(.secondary)
+            
+            FlowLayout(spacing: 8) {
+                ForEach(features, id: \.1) { feature in
+                    HStack(spacing: 4) {
+                        Image(systemName: feature.0)
+                            .font(.caption)
+                        Text(feature.1)
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.quaternary)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
             }
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
+        return result.size
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
+        for (index, subview) in subviews.enumerated() {
+            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
+                                       y: bounds.minY + result.positions[index].y),
+                          proposal: .unspecified)
+        }
+    }
+    
+    struct FlowResult {
+        var size: CGSize = .zero
+        var positions: [CGPoint] = []
+        
+        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
+            var x: CGFloat = 0
+            var y: CGFloat = 0
+            var rowHeight: CGFloat = 0
+            
+            for subview in subviews {
+                let size = subview.sizeThatFits(.unspecified)
+                
+                if x + size.width > maxWidth, x > 0 {
+                    x = 0
+                    y += rowHeight + spacing
+                    rowHeight = 0
+                }
+                
+                positions.append(CGPoint(x: x, y: y))
+                rowHeight = max(rowHeight, size.height)
+                x += size.width + spacing
+            }
+            
+            self.size = CGSize(width: maxWidth, height: y + rowHeight)
+        }
     }
 }
 
