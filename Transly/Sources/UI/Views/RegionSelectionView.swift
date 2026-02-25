@@ -7,29 +7,26 @@ class RegionSelectionWindow: NSWindow {
     private var selectionRect: CGRect = .zero
     private var selectionView: SelectionView?
     private var completion: ((CGRect) -> Void)?
+    private var eventMonitor: Any?
     
     init(completion: @escaping (CGRect) -> Void) {
         self.completion = completion
         
-        // 创建一个覆盖整个屏幕的窗口
         let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
         super.init(contentRect: screenFrame, styleMask: .borderless, backing: .buffered, defer: false)
         
-        // 设置窗口属性
         level = .screenSaver
         backgroundColor = NSColor.black.withAlphaComponent(0.3)
         isOpaque = false
         ignoresMouseEvents = false
         makeKeyAndOrderFront(nil)
         
-        // 创建选择视图
         let contentView = NSView(frame: screenFrame)
         self.contentView = contentView
         
         selectionView = SelectionView(frame: screenFrame)
         contentView.addSubview(selectionView!)
         
-        // 添加鼠标事件监控
         contentView.window?.contentView?.addTrackingArea(NSTrackingArea(
             rect: screenFrame,
             options: [.mouseEnteredAndExited, .mouseMoved, .activeAlways],
@@ -51,6 +48,26 @@ class RegionSelectionWindow: NSWindow {
             self?.mouseUp(with: event)
             return event
         })
+        
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 {
+                self?.cancel()
+                return nil
+            }
+            return event
+        }
+    }
+    
+    private func cancel() {
+        close()
+    }
+    
+    override func close() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        super.close()
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -68,7 +85,6 @@ class RegionSelectionWindow: NSWindow {
         currentPoint = event.locationInWindow
         updateSelection()
         
-        // 确保选择区域有效
         let rect = selectionRect
         NSLog("区域选择完成：")
         NSLog("  选择区域：x=%f, y=%f, width=%f, height=%f", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height)
@@ -102,15 +118,12 @@ class SelectionView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        // 绘制选择区域
         if !selectionRect.isEmpty {
-            // 绘制边框
             let path = NSBezierPath(rect: selectionRect)
             NSColor.blue.setStroke()
             path.lineWidth = 2
             path.stroke()
             
-            // 绘制填充
             NSColor.blue.withAlphaComponent(0.1).setFill()
             path.fill()
         }
@@ -121,12 +134,10 @@ struct RegionSelection: NSViewRepresentable {
     let completion: (CGRect) -> Void
     
     func makeNSView(context: Context) -> NSView {
-        // 这个视图只是一个占位符，实际的选择窗口会在协调器中创建
         return NSView()
     }
     
     func updateNSView(_ nsView: NSView, context: Context) {
-        // 当视图出现时，创建选择窗口
         if context.coordinator.window == nil {
             context.coordinator.createWindow(completion: completion)
         }
