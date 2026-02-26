@@ -3,18 +3,9 @@ import ProjectDescription
 let project = Project(
     name: "Transly",
     settings: .settings(
-        base: [
-            "PRODUCT_NAME": "$(TARGET_NAME)",
-            "CODE_SIGN_STYLE": "Automatic",
-            "DEVELOPMENT_TEAM": "FG7L2ZUJ37",
-        ],
         configurations: [
-            .debug(name: .debug, settings: [
-                "CODE_SIGN_IDENTITY": "Apple Development",
-            ]),
-            .release(name: .release, settings: [
-                "CODE_SIGN_IDENTITY": "Apple Development",
-            ])
+            .debug(name: .debug, xcconfig: "Configurations/signing.xcconfig"),
+            .release(name: .release, xcconfig: "Configurations/signing.xcconfig")
         ]
     ),
     targets: [
@@ -25,26 +16,24 @@ let project = Project(
             bundleId: "com.icuxika.Transly",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
-                "NSAppTransportSecurity": [
-                    "NSAllowsArbitraryLoads": true
-                ],
-                "NSHumanReadableCopyright": "Copyright © 2024 icuxika. All rights reserved.",
-                "LSMinimumSystemVersion": "14.0",
-                "LSUIElement": true,
-                "NSAppleEventsUsageDescription": "Transly needs access to send Apple Events for text selection monitoring.",
-                "NSSystemAdministrationUsageDescription": "Transly needs accessibility permissions to monitor text selections and provide instant translations.",
-                "NSScreenCaptureUsageDescription": "Transly needs screen recording permission to capture screenshots for OCR text recognition.",
-                "NSApplicationSceneManifest": [
-                    "NSApplicationSupportsMultipleScenes": true,
-                    "NSApplicationSupportsTabbedScene": false,
-                    "UISceneConfigurations": [:]
-                ]
+                "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)"
             ]),
             buildableFolders: [
                 "Transly/Sources",
                 "Transly/Resources",
             ],
-            dependencies: []
+            dependencies: [],
+            settings: .settings(
+                base: [
+                    "CODE_SIGN_STYLE": "$(TEST_CODE_SIGN_STYLE)",
+                    "DEVELOPMENT_TEAM": "$(TEST_DEVELOPMENT_TEAM)",
+                    "CODE_SIGN_IDENTITY": "$(TEST_CODE_SIGN_IDENTITY)"
+                ],
+                configurations: [
+                    .debug(name: .debug, xcconfig: "Configurations/signing.xcconfig"),
+                    .release(name: .release, xcconfig: "Configurations/signing.xcconfig")
+                ]
+            ),
         ),
         .target(
             name: "TranslyTests",

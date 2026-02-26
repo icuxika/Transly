@@ -91,3 +91,5 @@ dist/
 ### Project specific ###
 logo1024.png
 spec/
+
+Configurations/signing.xcconfig
