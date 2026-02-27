@@ -6,7 +6,7 @@ struct SetupGuideView: View {
     @State private var hasAccessibilityPermission: Bool = false
     @State private var hasScreenRecordingPermission: Bool = false
     
-    private let selectionManager = SelectionManager()
+    private let accessibilityService = AccessibilitySelectionService.shared
     
     var body: some View {
         VStack(spacing: 24) {
@@ -76,7 +76,7 @@ struct SetupGuideView: View {
     }
     
     private func updatePermissionStatus() {
-        hasAccessibilityPermission = selectionManager.hasAccessibilityPermission
+        hasAccessibilityPermission = accessibilityService.checkPermission()
         
         Task {
             let screenshotCapture = ScreenshotCapture.shared
@@ -92,10 +92,7 @@ struct SetupGuideView: View {
     }
     
     private func requestAccessibilityPermission() {
-        if !checkAccessibilityPermission() {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-            _ = AXIsProcessTrustedWithOptions(options)
-        }
+        accessibilityService.requestPermission()
     }
     
     private func requestScreenRecordingPermission() {
@@ -103,11 +100,6 @@ struct SetupGuideView: View {
             let screenshotCapture = ScreenshotCapture.shared
             _ = await screenshotCapture.requestScreenRecordingPermission()
         }
-    }
-    
-    private func checkAccessibilityPermission() -> Bool {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
-        return AXIsProcessTrustedWithOptions(options)
     }
     
     private func openAccessibilitySettings() {

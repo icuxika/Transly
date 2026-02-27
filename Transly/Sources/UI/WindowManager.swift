@@ -11,7 +11,6 @@ final class WindowManager: ObservableObject {
     private var settingsWindow: NSWindow?
     private var setupGuideWindow: NSWindow?
     
-    private let selectionManager = SelectionManager()
     private let accessibilitySelectionService = AccessibilitySelectionService()
     
     private init() {}
@@ -65,21 +64,6 @@ final class WindowManager: ObservableObject {
     }
     
     func showSelectionTranslation() {
-        if !selectionManager.hasAccessibilityPermission {
-            selectionManager.requestPermission()
-            return
-        }
-        
-        let result = selectionManager.getSelectedTextNow()
-        switch result {
-        case .success(let text):
-            showInputTranslation(initialText: text)
-        case .noSelection:
-            showInputTranslation(initialText: nil)
-        }
-    }
-    
-    func showAccessibilitySelectionTranslation() {
         if !accessibilitySelectionService.checkPermission() {
             accessibilitySelectionService.requestPermission()
             return
@@ -90,7 +74,7 @@ final class WindowManager: ObservableObject {
             switch result {
             case .success(let text, let source):
                 await MainActor.run {
-                    NSLog("划词翻译+ 获取文字成功，来源: \(source == .accessibilityAPI ? "Accessibility API" : "剪贴板回退")")
+                    NSLog("划词翻译 获取文字成功，来源: \(source == .accessibilityAPI ? "Accessibility API" : "剪贴板回退")")
                     showInputTranslation(initialText: text)
                 }
             case .noSelection, .permissionDenied:
