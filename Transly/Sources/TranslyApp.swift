@@ -51,6 +51,11 @@ struct MenuBarView: View {
             }
             .keyboardShortcut("d", modifiers: .command)
             
+            Button("划词翻译+ (⌥F)") {
+                WindowManager.shared.showAccessibilitySelectionTranslation()
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            
             Button("截图翻译 (⌥S)") {
                 Task {
                     await WindowManager.shared.showOCRTranslation()
@@ -100,6 +105,8 @@ class HotkeyHandler: HotkeyManagerDelegate {
                 WindowManager.shared.showInputTranslation()
             case .selectionTranslation:
                 WindowManager.shared.showSelectionTranslation()
+            case .accessibilitySelectionTranslation:
+                WindowManager.shared.showAccessibilitySelectionTranslation()
             case .ocrTranslation:
                 Task {
                     await WindowManager.shared.showOCRTranslation()

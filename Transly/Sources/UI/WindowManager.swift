@@ -12,6 +12,7 @@ final class WindowManager: ObservableObject {
     private var setupGuideWindow: NSWindow?
     
     private let selectionManager = SelectionManager()
+    private let accessibilitySelectionService = AccessibilitySelectionService()
     
     private init() {}
     
@@ -75,6 +76,27 @@ final class WindowManager: ObservableObject {
             showInputTranslation(initialText: text)
         case .noSelection:
             showInputTranslation(initialText: nil)
+        }
+    }
+    
+    func showAccessibilitySelectionTranslation() {
+        if !accessibilitySelectionService.checkPermission() {
+            accessibilitySelectionService.requestPermission()
+            return
+        }
+        
+        Task {
+            let result = await accessibilitySelectionService.getSelectedTextWithFallback()
+            switch result {
+            case .success(let text):
+                await MainActor.run {
+                    showInputTranslation(initialText: text)
+                }
+            case .noSelection, .permissionDenied:
+                await MainActor.run {
+                    showInputTranslation(initialText: nil)
+                }
+            }
         }
     }
     

@@ -5,6 +5,7 @@ import Foundation
 enum HotkeyAction {
     case inputTranslation
     case selectionTranslation
+    case accessibilitySelectionTranslation
     case ocrTranslation
     case clipboardTranslation
 }
@@ -24,6 +25,7 @@ final class HotkeyManager {
     private let hotkeyConfigs: [(action: HotkeyAction, keyCode: UInt32, modifiers: UInt32)] = [
         (.inputTranslation, UInt32(kVK_ANSI_A), UInt32(optionKey)),
         (.selectionTranslation, UInt32(kVK_ANSI_D), UInt32(optionKey)),
+        (.accessibilitySelectionTranslation, UInt32(kVK_ANSI_F), UInt32(optionKey)),
         (.ocrTranslation, UInt32(kVK_ANSI_S), UInt32(optionKey)),
         (.clipboardTranslation, UInt32(kVK_ANSI_V), UInt32(optionKey))
     ]
@@ -114,7 +116,7 @@ final class HotkeyManager {
         guard status == noErr else { return }
         
         let index = Int(hotkeyID.id) - 1
-        guard index >= 0 && index < hotkeyConfigs.count else { return }
+        guard index >= 0, index < hotkeyConfigs.count else { return }
         
         let action = hotkeyConfigs[index].action
         
