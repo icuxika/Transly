@@ -10,7 +10,7 @@ enum AccessibilitySelectionResult {
 final class AccessibilitySelectionService {
     static let shared = AccessibilitySelectionService()
     
-    private init() {}
+    init() {}
     
     func checkPermission() -> Bool {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false] as CFDictionary
@@ -32,15 +32,18 @@ final class AccessibilitySelectionService {
         var focusedApp: AnyObject?
         let focusedAppResult = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedApplicationAttribute as CFString, &focusedApp)
         
-        guard focusedAppResult == .success, let focusedAppElement = focusedApp as? AXUIElement else {
+        guard focusedAppResult == .success else {
             return .noSelection
         }
+        
+        let focusedAppElement = focusedApp as! AXUIElement
         
         var focusedWindow: AnyObject?
         _ = AXUIElementCopyAttributeValue(focusedAppElement, kAXFocusedWindowAttribute as CFString, &focusedWindow)
         
-        if let focusedWindowElement = focusedWindow as? AXUIElement {
-            if let text = getSelectedTextFromElement(focusedWindowElement) {
+        if let focusedWindowElement = focusedWindow {
+            let windowElement = focusedWindowElement as! AXUIElement
+            if let text = getSelectedTextFromElement(windowElement) {
                 return .success(text)
             }
         }
@@ -48,8 +51,9 @@ final class AccessibilitySelectionService {
         var focusedUIElement: AnyObject?
         _ = AXUIElementCopyAttributeValue(focusedAppElement, kAXFocusedUIElementAttribute as CFString, &focusedUIElement)
         
-        if let focusedElement = focusedUIElement as? AXUIElement {
-            if let text = getSelectedTextFromElement(focusedElement) {
+        if let focusedElement = focusedUIElement {
+            let element = focusedElement as! AXUIElement
+            if let text = getSelectedTextFromElement(element) {
                 return .success(text)
             }
         }
@@ -68,9 +72,10 @@ final class AccessibilitySelectionService {
         var selectedRange: AnyObject?
         let rangeResult = AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selectedRange)
         
-        if rangeResult == .success, let rangeValue = selectedRange as? AXValue {
+        if rangeResult == .success, let rangeValue = selectedRange {
+            let axValue = rangeValue as! AXValue
             var range = CFRange()
-            if AXValueGetValue(rangeValue, .cfRange, &range), range.length > 0 {
+            if AXValueGetValue(axValue, .cfRange, &range), range.length > 0 {
                 var value: AnyObject?
                 let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &value)
                 
