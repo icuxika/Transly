@@ -1,8 +1,13 @@
 import AppKit
 import Foundation
 
+enum TextSource {
+    case accessibilityAPI
+    case clipboardFallback
+}
+
 enum AccessibilitySelectionResult {
-    case success(String)
+    case success(String, TextSource)
     case noSelection
     case permissionDenied
 }
@@ -44,7 +49,7 @@ final class AccessibilitySelectionService {
         if let focusedWindowElement = focusedWindow {
             let windowElement = focusedWindowElement as! AXUIElement
             if let text = getSelectedTextFromElement(windowElement) {
-                return .success(text)
+                return .success(text, .accessibilityAPI)
             }
         }
         
@@ -54,7 +59,7 @@ final class AccessibilitySelectionService {
         if let focusedElement = focusedUIElement {
             let element = focusedElement as! AXUIElement
             if let text = getSelectedTextFromElement(element) {
-                return .success(text)
+                return .success(text, .accessibilityAPI)
             }
         }
         
@@ -124,7 +129,7 @@ final class AccessibilitySelectionService {
         }
         
         if let text = selectedText, !text.isEmpty {
-            return .success(text)
+            return .success(text, .clipboardFallback)
         }
         
         return .noSelection

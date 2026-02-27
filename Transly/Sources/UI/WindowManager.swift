@@ -88,8 +88,9 @@ final class WindowManager: ObservableObject {
         Task {
             let result = await accessibilitySelectionService.getSelectedTextWithFallback()
             switch result {
-            case .success(let text):
+            case .success(let text, let source):
                 await MainActor.run {
+                    NSLog("划词翻译+ 获取文字成功，来源: \(source == .accessibilityAPI ? "Accessibility API" : "剪贴板回退")")
                     showInputTranslation(initialText: text)
                 }
             case .noSelection, .permissionDenied:
