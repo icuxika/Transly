@@ -16,6 +16,7 @@ let project = Project(
             bundleId: "com.icuxika.Transly",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
+                "LSUIElement": true,
                 "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)"
             ]),
             buildableFolders: [
