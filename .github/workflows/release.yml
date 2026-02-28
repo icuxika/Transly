@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g. 0.1.0)"
+        required: false
+        default: "0.0.0-dev"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-26
+    environment: Prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Install Tuist via mise
+        uses: jdx/mise-action@v2
+        with:
+          install: true
+
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Write Configurations/signing.xcconfig
+        run: |
+          cat > Configurations/signing.xcconfig << EOF
+          TEST_CODE_SIGN_STYLE = Automatic
+          TEST_DEVELOPMENT_TEAM = ${{ secrets.DEVELOPMENT_TEAM }}
+          TEST_CODE_SIGN_IDENTITY = ${{ secrets.CODE_SIGN_IDENTITY }}
+          EOF
+
+      - name: Resolve dependencies and generate project
+        run: tuist install && tuist generate
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          else
+            VERSION="${{ github.event.inputs.version || '0.0.0-dev' }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Archive
+        run: |
+          tuist xcodebuild archive \
+            -scheme Transly \
+            -archivePath build/Transly.xcarchive
+
+      - name: Verify code signature
+        run: |
+          codesign -d -vv build/Transly.xcarchive/Products/Applications/Transly.app
+
+      - name: Create DMG
+        run: |
+          create-dmg \
+            --volname "Transly" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 160 \
+            --icon "Transly.app" 180 170 \
+            --app-drop-link 480 170 \
+            --hide-extension "Transly.app" \
+            "Transly-v${{ steps.version.outputs.version }}.dmg" \
+            build/Transly.xcarchive/Products/Applications/ \
+            || test $? -eq 1
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          generate_release_notes: true
+          files: |
+            Transly-v${{ steps.version.outputs.version }}.dmg
