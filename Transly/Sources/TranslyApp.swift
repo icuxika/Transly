@@ -53,7 +53,7 @@ struct CheckForUpdatesView: View {
     }
     
     var body: some View {
-        Button("Check for Updates…", action: updater.checkForUpdates)
+        Button("检查更新", action: updater.checkForUpdates)
             .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
     }
 }
@@ -62,19 +62,18 @@ struct CheckForUpdatesView: View {
 struct TranslyApp: App {
     @NSApplicationDelegateAdaptor(ApplicationDelegate.self) var appDelegate
     
+    private let updaterController: SPUStandardUpdaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    
+    
     var body: some Scene {
         MenuBarExtra("Transly", systemImage: "character.bubble") {
-            MenuBarView()
+            MenuBarView(updaterController: updaterController)
         }
     }
 }
 
 struct MenuBarView: View {
-    private let updaterController: SPUStandardUpdaterController
-    
-    init() {
-            updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-        }
+    let updaterController: SPUStandardUpdaterController
     
     var body: some View {
         Group {
@@ -112,9 +111,7 @@ struct MenuBarView: View {
             
             Divider()
             
-            Button("检查更新") {
-                CheckForUpdatesView(updater: updaterController.updater)
-            }
+            CheckForUpdatesView(updater: updaterController.updater)
             Button("设置") {
                 WindowManager.shared.showSettings()
             }

@@ -19,7 +19,7 @@ let project = Project(
                 "LSUIElement": true,
                 "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)",
                 "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
-                "SUFeedURL": "https://github.com/icuxika/Transly/releases/download/latest/appcast.xml"
+                "SUFeedURL": "https://github.com/icuxika/Transly/releases/latest/download/appcast.xml"
             ]),
             buildableFolders: [
                 "Transly/Sources",
