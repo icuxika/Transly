@@ -118,6 +118,12 @@ struct MenuBarView: View {
             
             Divider()
             
+            Button("关于") {
+                WindowManager.shared.showAbout()
+            }
+            
+            Divider()
+            
             Button("退出") {
                 NSApplication.shared.terminate(nil)
             }

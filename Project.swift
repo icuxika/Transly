@@ -34,7 +34,7 @@ let project = Project(
                     "DEVELOPMENT_TEAM": "$(TEST_DEVELOPMENT_TEAM)",
                     "CODE_SIGN_IDENTITY": "$(TEST_CODE_SIGN_IDENTITY)",
                     "CURRENT_PROJECT_VERSION": "1",
-                    "MARKETING_VERSION": "0.1.7"
+                    "MARKETING_VERSION": "0.1.8"
                 ],
                 configurations: [
                     .debug(name: .debug, xcconfig: "Configurations/signing.xcconfig"),
