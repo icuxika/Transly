@@ -33,7 +33,7 @@ let project = Project(
                     "CODE_SIGN_STYLE": "$(TEST_CODE_SIGN_STYLE)",
                     "DEVELOPMENT_TEAM": "$(TEST_DEVELOPMENT_TEAM)",
                     "CODE_SIGN_IDENTITY": "$(TEST_CODE_SIGN_IDENTITY)",
-                    "MARKETING_VERSION": "0.2.0",
+                    "MARKETING_VERSION": "0.2.1",
                     "CURRENT_PROJECT_VERSION": "1"
                 ],
                 configurations: [
