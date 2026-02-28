@@ -16,6 +16,8 @@ let project = Project(
             bundleId: "com.icuxika.Transly",
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+                "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
                 "LSUIElement": true,
                 "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)",
                 "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
@@ -33,8 +35,8 @@ let project = Project(
                     "CODE_SIGN_STYLE": "$(TEST_CODE_SIGN_STYLE)",
                     "DEVELOPMENT_TEAM": "$(TEST_DEVELOPMENT_TEAM)",
                     "CODE_SIGN_IDENTITY": "$(TEST_CODE_SIGN_IDENTITY)",
-                    "CURRENT_PROJECT_VERSION": "1",
-                    "MARKETING_VERSION": "0.1.8"
+                    "MARKETING_VERSION": "0.1.8",
+                    "CURRENT_PROJECT_VERSION": "100"
                 ],
                 configurations: [
                     .debug(name: .debug, xcconfig: "Configurations/signing.xcconfig"),
