@@ -3,14 +3,17 @@
 set -e
 
 APP_NAME="Transly"
-SOURCE_PATH="build/Release/${APP_NAME}.app"
+SOURCE_PATH="build/Transly.xcarchive/Products/Applications/${APP_NAME}.app"
 INSTALL_PATH="/Applications/${APP_NAME}.app"
 
 echo "🧹 Cleaning..."
 tuist clean
 
+echo "🔧 Generating project..."
+tuist generate --no-open
+
 echo "🔨 Building Release version..."
-tuist xcodebuild build
+tuist xcodebuild archive -scheme ${APP_NAME} -archivePath build/${APP_NAME}.xcarchive
 
 if [ ! -d "${SOURCE_PATH}" ]; then
     echo "❌ Error: Could not find built app at ${SOURCE_PATH}"
