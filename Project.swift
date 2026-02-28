@@ -2,11 +2,9 @@ import ProjectDescription
 
 let project = Project(
     name: "Transly",
-    settings: .settings(
-        configurations: [
-            .debug(name: .debug, xcconfig: "Configurations/signing.xcconfig"),
-            .release(name: .release, xcconfig: "Configurations/signing.xcconfig")
-        ]
+    options: .options(
+        defaultKnownRegions: ["en", "zh-Hans"],
+        developmentRegion: "zh-Hans",
     ),
     targets: [
         .target(
@@ -35,7 +33,7 @@ let project = Project(
                     "CODE_SIGN_STYLE": "$(TEST_CODE_SIGN_STYLE)",
                     "DEVELOPMENT_TEAM": "$(TEST_DEVELOPMENT_TEAM)",
                     "CODE_SIGN_IDENTITY": "$(TEST_CODE_SIGN_IDENTITY)",
-                    "MARKETING_VERSION": "0.1.10",
+                    "MARKETING_VERSION": "0.2.0",
                     "CURRENT_PROJECT_VERSION": "100"
                 ],
                 configurations: [
