@@ -51,7 +51,7 @@ jobs:
           TEST_CODE_SIGN_STYLE = Automatic
           TEST_DEVELOPMENT_TEAM = ${{ secrets.DEVELOPMENT_TEAM }}
           TEST_CODE_SIGN_IDENTITY = ${{ secrets.CODE_SIGN_IDENTITY }}
-          SPARKLE_PUBLIC_ED_KEY = ${{ SPARKLE_PUBLIC_ED_KEY }}
+          SPARKLE_PUBLIC_ED_KEY = ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
           EOF
 
       - name: Resolve dependencies and generate project
