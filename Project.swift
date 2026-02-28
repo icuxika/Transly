@@ -17,13 +17,17 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "LSUIElement": true,
-                "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)"
+                "NSScreenCaptureUsageDescription": "需要截取屏幕内容以识别图片中的文字并完成翻译。(Need to capture screen content to recognize text in images and complete translation.)",
+                "SUPublicEDKey": "$(SPARKLE_PUBLIC_ED_KEY)",
+                "SUFeedURL": "https://github.com/icuxika/Transly/releases/download/latest/appcast.xml"
             ]),
             buildableFolders: [
                 "Transly/Sources",
                 "Transly/Resources",
             ],
-            dependencies: [],
+            dependencies: [
+                .external(name: "Sparkle")
+            ],
             settings: .settings(
                 base: [
                     "CODE_SIGN_STYLE": "$(TEST_CODE_SIGN_STYLE)",

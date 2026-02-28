@@ -51,6 +51,7 @@ jobs:
           TEST_CODE_SIGN_STYLE = Automatic
           TEST_DEVELOPMENT_TEAM = ${{ secrets.DEVELOPMENT_TEAM }}
           TEST_CODE_SIGN_IDENTITY = ${{ secrets.CODE_SIGN_IDENTITY }}
+          SPARKLE_PUBLIC_ED_KEY = ${{ SPARKLE_PUBLIC_ED_KEY }}
           EOF
 
       - name: Resolve dependencies and generate project
@@ -91,6 +92,36 @@ jobs:
             build/Transly.xcarchive/Products/Applications/ \
             || test $? -eq 1
 
+      - name: Create ZIP
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent build/Transly.xcarchive/Products/Applications/Transly.app \
+            "Transly-v${{ steps.version.outputs.version }}.zip"
+
+      - name: Download Sparkle CLI tools
+        run: |
+          SPARKLE_VERSION=$(python3 -c "import json; pins=json.load(open('Tuist/Package.resolved'))['pins']; print(next(p['state']['version'] for p in pins if p['identity']=='sparkle'))")
+          echo "Using Sparkle CLI v${SPARKLE_VERSION} (from Package.resolved)"
+          mkdir -p /tmp/sparkle
+          curl -sL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" | tar xJ -C /tmp/sparkle
+
+      - name: Generate appcast
+        env:
+          SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+        run: |
+          mkdir -p build/release
+          cp "Transly-v${{ steps.version.outputs.version }}.zip" build/release/
+
+          # Download existing appcast to preserve history (skip if first release or invalid)
+          curl -sfL "https://github.com/icuxika/Transly/releases/latest/download/appcast.xml" \
+            -o appcast.xml || rm -f appcast.xml
+
+          DOWNLOAD_URL="https://github.com/icuxika/Transly/releases/download/v${{ steps.version.outputs.version }}"
+          /tmp/sparkle/bin/generate_appcast \
+            --ed-key-file <(echo "$SPARKLE_PRIVATE_ED_KEY") \
+            --download-url-prefix "$DOWNLOAD_URL/" \
+            -o appcast.xml \
+            build/release/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -100,3 +131,5 @@ jobs:
           generate_release_notes: true
           files: |
             Transly-v${{ steps.version.outputs.version }}.dmg
+            Transly-v${{ steps.version.outputs.version }}.zip
+            appcast.xml
