@@ -32,9 +32,12 @@ jobs:
         run: brew install create-dmg
 
       - name: Install Tuist via mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v3
         with:
           install: true
+          mise_toml: |
+            [tools]
+            tuist = "4.151.0"
 
       - name: Import signing certificate
         uses: apple-actions/import-codesign-certs@v3
