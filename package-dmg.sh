@@ -26,7 +26,6 @@ echo "📁 创建 DMG 包..."
 create-dmg \
     --volname "$APP_NAME" \
     --hdiutil-quiet \
-    --skip-jenkins \
     --window-pos 200 120 \
     --window-size 660 400 \
     --icon-size 160 \
