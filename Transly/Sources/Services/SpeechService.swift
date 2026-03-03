@@ -2,13 +2,16 @@ import AVFoundation
 import Foundation
 
 @MainActor
-final class SpeechService: ObservableObject {
+final class SpeechService: NSObject, ObservableObject {
     static let shared = SpeechService()
     
     private let synthesizer = AVSpeechSynthesizer()
     @Published var isSpeaking: Bool = false
     
-    private init() {}
+    private override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
     
     func speak(_ text: String, language: Language) {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
@@ -31,6 +34,20 @@ final class SpeechService: ObservableObject {
             synthesizer.stopSpeaking(at: .immediate)
         }
         isSpeaking = false
+    }
+}
+
+extension SpeechService: AVSpeechSynthesizerDelegate {
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            isSpeaking = false
+        }
+    }
+    
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            isSpeaking = false
+        }
     }
 }
 

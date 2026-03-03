@@ -13,13 +13,12 @@ struct InputTranslationView: View {
     @State private var pendingServices: Set<TranslationServiceType> = []
     @State private var debounceTask: Task<Void, Never>?
     @State private var isAlwaysOnTop: Bool = false
-    @State private var isSpeaking: Bool = false
     @State private var isUserManuallyChanged: Bool = false
     
     private let translationService = TranslationService.shared
     private let clipboardService = ClipboardService.shared
     private let config = AppConfigService.shared
-    private let speechService = SpeechService.shared
+    @ObservedObject private var speechService = SpeechService.shared
     
     private var enabledServices: [TranslationServiceType] {
         Array(config.enabledTranslationServices)
@@ -94,20 +93,18 @@ struct InputTranslationView: View {
                 Spacer()
                 
                 Button(action: {
-                    if isSpeaking {
+                    if speechService.isSpeaking {
                         speechService.stop()
-                        isSpeaking = false
                     } else {
                         speechService.speak(inputText, language: sourceLanguage)
-                        isSpeaking = true
                     }
                 }) {
-                    Image(systemName: isSpeaking ? "stop.circle.fill" : "speaker.wave.2")
+                    Image(systemName: speechService.isSpeaking ? "stop.circle.fill" : "speaker.wave.2")
                         .font(.caption)
-                        .foregroundStyle(isSpeaking ? .red : .blue)
+                        .foregroundStyle(speechService.isSpeaking ? .red : .blue)
                 }
                 .buttonStyle(.plain)
-                .help(isSpeaking ? "停止播放" : "播放原文语音")
+                .help(speechService.isSpeaking ? "停止播放" : "播放原文语音")
                 .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 
                 Button(action: {
