@@ -6,7 +6,18 @@ final class AppConfigService {
     
     private let defaults = UserDefaults.standard
     
-    private init() {}
+    private init() {
+        sourceLanguage = Self.loadSourceLanguage()
+        targetLanguage = Self.loadTargetLanguage()
+        autoCopy = Self.loadAutoCopy()
+        enabledTranslationServices = Self.loadEnabledTranslationServices()
+        deepSeekAPIKey = Self.loadDeepSeekAPIKey()
+        openAIAPIKey = Self.loadOpenAIAPIKey()
+        openAIEndpoint = Self.loadOpenAIEndpoint()
+        openAIModel = Self.loadOpenAIModel()
+        ollamaEndpoint = Self.loadOllamaEndpoint()
+        ollamaModel = Self.loadOllamaModel()
+    }
     
     private enum Keys {
         static let hasCompletedSetup = "HasCompletedSetup"
@@ -28,74 +39,46 @@ final class AppConfigService {
     }
     
     var sourceLanguage: Language {
-        get {
-            if let rawValue = defaults.string(forKey: Keys.sourceLanguage),
-               let language = Language(rawValue: rawValue) {
-                return language
-            }
-            return .auto
-        }
-        set { defaults.set(newValue.rawValue, forKey: Keys.sourceLanguage) }
+        didSet { defaults.set(sourceLanguage.rawValue, forKey: Keys.sourceLanguage) }
     }
     
     var targetLanguage: Language {
-        get {
-            if let rawValue = defaults.string(forKey: Keys.targetLanguage),
-               let language = Language(rawValue: rawValue) {
-                return language
-            }
-            return .chinese
-        }
-        set { defaults.set(newValue.rawValue, forKey: Keys.targetLanguage) }
+        didSet { defaults.set(targetLanguage.rawValue, forKey: Keys.targetLanguage) }
     }
     
     var autoCopy: Bool {
-        get { defaults.object(forKey: Keys.autoCopy) as? Bool ?? true }
-        set { defaults.set(newValue, forKey: Keys.autoCopy) }
+        didSet { defaults.set(autoCopy, forKey: Keys.autoCopy) }
     }
     
     var enabledTranslationServices: Set<TranslationServiceType> {
-        get {
-            if let saved = defaults.array(forKey: Keys.enabledTranslationServices) as? [String] {
-                let services = saved.compactMap { TranslationServiceType(rawValue: $0) }
-                return services.isEmpty ? Set(TranslationServiceType.availableServices.filter { $0.isEnabledByDefault }) : Set(services)
-            }
-            return Set(TranslationServiceType.availableServices.filter { $0.isEnabledByDefault })
-        }
-        set {
-            let array = Array(newValue.map { $0.rawValue })
+        didSet {
+            let array = Array(enabledTranslationServices.map { $0.rawValue })
             defaults.set(array, forKey: Keys.enabledTranslationServices)
         }
     }
     
     var deepSeekAPIKey: String {
-        get { defaults.string(forKey: Keys.deepSeekAPIKey) ?? "" }
-        set { defaults.set(newValue, forKey: Keys.deepSeekAPIKey) }
+        didSet { defaults.set(deepSeekAPIKey, forKey: Keys.deepSeekAPIKey) }
     }
     
     var openAIAPIKey: String {
-        get { defaults.string(forKey: Keys.openAIAPIKey) ?? "" }
-        set { defaults.set(newValue, forKey: Keys.openAIAPIKey) }
+        didSet { defaults.set(openAIAPIKey, forKey: Keys.openAIAPIKey) }
     }
     
     var openAIEndpoint: String {
-        get { defaults.string(forKey: Keys.openAIEndpoint) ?? TranslationServiceType.openai.defaultEndpoint }
-        set { defaults.set(newValue, forKey: Keys.openAIEndpoint) }
+        didSet { defaults.set(openAIEndpoint, forKey: Keys.openAIEndpoint) }
     }
     
     var openAIModel: String {
-        get { defaults.string(forKey: Keys.openAIModel) ?? TranslationServiceType.openai.defaultModel }
-        set { defaults.set(newValue, forKey: Keys.openAIModel) }
+        didSet { defaults.set(openAIModel, forKey: Keys.openAIModel) }
     }
     
     var ollamaEndpoint: String {
-        get { defaults.string(forKey: Keys.ollamaEndpoint) ?? TranslationServiceType.ollama.defaultEndpoint }
-        set { defaults.set(newValue, forKey: Keys.ollamaEndpoint) }
+        didSet { defaults.set(ollamaEndpoint, forKey: Keys.ollamaEndpoint) }
     }
     
     var ollamaModel: String {
-        get { defaults.string(forKey: Keys.ollamaModel) ?? TranslationServiceType.ollama.defaultModel }
-        set { defaults.set(newValue, forKey: Keys.ollamaModel) }
+        didSet { defaults.set(ollamaModel, forKey: Keys.ollamaModel) }
     }
     
     func isServiceEnabled(_ service: TranslationServiceType) -> Bool {
@@ -176,5 +159,57 @@ final class AppConfigService {
         default:
             break
         }
+    }
+    
+    private static func loadSourceLanguage() -> Language {
+        if let rawValue = UserDefaults.standard.string(forKey: Keys.sourceLanguage),
+           let language = Language(rawValue: rawValue) {
+            return language
+        }
+        return .auto
+    }
+    
+    private static func loadTargetLanguage() -> Language {
+        if let rawValue = UserDefaults.standard.string(forKey: Keys.targetLanguage),
+           let language = Language(rawValue: rawValue) {
+            return language
+        }
+        return .chinese
+    }
+    
+    private static func loadAutoCopy() -> Bool {
+        UserDefaults.standard.object(forKey: Keys.autoCopy) as? Bool ?? true
+    }
+    
+    private static func loadEnabledTranslationServices() -> Set<TranslationServiceType> {
+        if let saved = UserDefaults.standard.array(forKey: Keys.enabledTranslationServices) as? [String] {
+            let services = saved.compactMap { TranslationServiceType(rawValue: $0) }
+            return services.isEmpty ? Set(TranslationServiceType.availableServices.filter { $0.isEnabledByDefault }) : Set(services)
+        }
+        return Set(TranslationServiceType.availableServices.filter { $0.isEnabledByDefault })
+    }
+    
+    private static func loadDeepSeekAPIKey() -> String {
+        UserDefaults.standard.string(forKey: Keys.deepSeekAPIKey) ?? ""
+    }
+    
+    private static func loadOpenAIAPIKey() -> String {
+        UserDefaults.standard.string(forKey: Keys.openAIAPIKey) ?? ""
+    }
+    
+    private static func loadOpenAIEndpoint() -> String {
+        UserDefaults.standard.string(forKey: Keys.openAIEndpoint) ?? TranslationServiceType.openai.defaultEndpoint
+    }
+    
+    private static func loadOpenAIModel() -> String {
+        UserDefaults.standard.string(forKey: Keys.openAIModel) ?? TranslationServiceType.openai.defaultModel
+    }
+    
+    private static func loadOllamaEndpoint() -> String {
+        UserDefaults.standard.string(forKey: Keys.ollamaEndpoint) ?? TranslationServiceType.ollama.defaultEndpoint
+    }
+    
+    private static func loadOllamaModel() -> String {
+        UserDefaults.standard.string(forKey: Keys.ollamaModel) ?? TranslationServiceType.ollama.defaultModel
     }
 }
