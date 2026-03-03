@@ -13,10 +13,13 @@ struct InputTranslationView: View {
     @State private var pendingServices: Set<TranslationServiceType> = []
     @State private var debounceTask: Task<Void, Never>?
     @State private var isAlwaysOnTop: Bool = false
+    @State private var isSpeaking: Bool = false
+    @State private var isUserManuallyChanged: Bool = false
     
     private let translationService = TranslationService.shared
     private let clipboardService = ClipboardService.shared
     private let config = AppConfigService.shared
+    private let speechService = SpeechService.shared
     
     private var enabledServices: [TranslationServiceType] {
         Array(config.enabledTranslationServices)
@@ -46,6 +49,10 @@ struct InputTranslationView: View {
         .onChange(of: inputText) { _, newValue in
             debounceTask?.cancel()
             if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !isUserManuallyChanged {
+                    updateLanguagesFromDetection(text: newValue)
+                }
+                
                 debounceTask = Task {
                     try? await Task.sleep(nanoseconds: 500_000_000)
                     if !Task.isCancelled {
@@ -54,13 +61,27 @@ struct InputTranslationView: View {
                 }
             } else {
                 multiResult = nil
+                isUserManuallyChanged = false
             }
         }
         .task {
             if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                updateLanguagesFromDetection(text: inputText)
                 await translateText()
             }
         }
+    }
+    
+    private func updateLanguagesFromDetection(text: String) {
+        let defaultSource = config.sourceLanguage == .auto ? .english : config.sourceLanguage
+        let defaultTarget = config.targetLanguage
+        let (detected, target) = LanguageDetectionService.detectAndSuggestTarget(
+            from: text,
+            defaultSource: defaultSource,
+            defaultTarget: defaultTarget
+        )
+        sourceLanguage = detected == .auto ? defaultSource : detected
+        targetLanguage = target
     }
     
     private var inputSection: some View {
@@ -71,6 +92,23 @@ struct InputTranslationView: View {
                     .foregroundStyle(.secondary)
                 
                 Spacer()
+                
+                Button(action: {
+                    if isSpeaking {
+                        speechService.stop()
+                        isSpeaking = false
+                    } else {
+                        speechService.speak(inputText, language: sourceLanguage)
+                        isSpeaking = true
+                    }
+                }) {
+                    Image(systemName: isSpeaking ? "stop.circle.fill" : "speaker.wave.2")
+                        .font(.caption)
+                        .foregroundStyle(isSpeaking ? .red : .blue)
+                }
+                .buttonStyle(.plain)
+                .help(isSpeaking ? "停止播放" : "播放原文语音")
+                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 
                 Button(action: {
                     isAlwaysOnTop.toggle()
@@ -92,6 +130,7 @@ struct InputTranslationView: View {
                 Button("粘贴") {
                     if let pasteboardText = NSPasteboard.general.string(forType: .string) {
                         inputText = pasteboardText
+                        isUserManuallyChanged = false
                     }
                 }
                 .buttonStyle(.plain)
@@ -101,6 +140,7 @@ struct InputTranslationView: View {
                 Button("清空") {
                     inputText = ""
                     multiResult = nil
+                    isUserManuallyChanged = false
                 }
                 .buttonStyle(.plain)
                 .font(.caption)
@@ -122,12 +162,16 @@ struct InputTranslationView: View {
     
     private var languageSelectorSection: some View {
         HStack(spacing: 8) {
-            LanguagePicker(
-                title: "源语言",
-                selectedLanguage: $sourceLanguage,
-                languages: Language.sourceLanguages
-            )
+            Picker("源语言", selection: $sourceLanguage) {
+                ForEach(Language.sourceLanguages) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .labelsHidden()
             .frame(maxWidth: 120)
+            .onChange(of: sourceLanguage) { _, _ in
+                isUserManuallyChanged = true
+            }
             
             Button(action: {
                 swapLanguages()
@@ -137,12 +181,16 @@ struct InputTranslationView: View {
             }
             .buttonStyle(.bordered)
             
-            LanguagePicker(
-                title: "目标语言",
-                selectedLanguage: $targetLanguage,
-                languages: Language.targetLanguages
-            )
+            Picker("目标语言", selection: $targetLanguage) {
+                ForEach(Language.targetLanguages) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .labelsHidden()
             .frame(maxWidth: 120)
+            .onChange(of: targetLanguage) { _, _ in
+                isUserManuallyChanged = true
+            }
             
             Spacer()
             
@@ -226,11 +274,10 @@ struct InputTranslationView: View {
     }
     
     private func swapLanguages() {
-        if sourceLanguage != .auto {
-            let temp = sourceLanguage
-            sourceLanguage = targetLanguage
-            targetLanguage = temp
-        }
+        let temp = sourceLanguage
+        sourceLanguage = targetLanguage
+        targetLanguage = temp
+        isUserManuallyChanged = true
     }
     
     private func toggleService(_ service: TranslationServiceType) {
@@ -246,6 +293,27 @@ struct InputTranslationView: View {
     private func translateText() async {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
+        var effectiveSource = sourceLanguage
+        var effectiveTarget = targetLanguage
+        
+        if effectiveSource == effectiveTarget {
+            let defaultSource = config.sourceLanguage == .auto ? .english : config.sourceLanguage
+            let defaultTarget = config.targetLanguage
+            
+            if effectiveSource == defaultTarget {
+                effectiveTarget = (defaultSource == defaultTarget) ? .english : defaultSource
+            } else {
+                effectiveTarget = defaultTarget
+            }
+        }
+        
+        guard effectiveSource != effectiveTarget else {
+            multiResult = MultiTranslationResult(sourceText: inputText, results: [
+                TranslationServiceResult(serviceType: .google, translatedText: "", error: TranslationError.sameLanguage)
+            ])
+            return
+        }
+        
         isTranslating = true
         multiResult = MultiTranslationResult(sourceText: inputText, results: [])
         pendingServices = Set(enabledServices)
@@ -254,8 +322,8 @@ struct InputTranslationView: View {
         
         let result = await translationService.translateWithProgress(
             text: inputText,
-            from: sourceLanguage,
-            to: targetLanguage,
+            from: effectiveSource,
+            to: effectiveTarget,
             services: services
         ) { serviceResult in
             Task { @MainActor in
@@ -355,10 +423,6 @@ struct ServiceResultCard: View {
     }
 }
 
-#Preview {
-    InputTranslationView()
-}
-
 struct PendingServiceCard: View {
     let serviceType: TranslationServiceType
     let isExpanded: Bool
@@ -406,4 +470,8 @@ struct PendingServiceCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .animation(.easeInOut(duration: 0.2), value: isExpanded)
     }
+}
+
+#Preview {
+    InputTranslationView()
 }

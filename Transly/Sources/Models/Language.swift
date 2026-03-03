@@ -38,4 +38,12 @@ enum Language: String, CaseIterable, Identifiable, Codable {
     static var targetLanguages: [Language] {
         allCases.filter { $0 != .auto }
     }
+    
+    func smartTargetLanguage(defaultSource: Language = .english, defaultTarget: Language = .chinese) -> Language {
+        if self == defaultTarget {
+            return defaultSource
+        } else {
+            return defaultTarget
+        }
+    }
 }

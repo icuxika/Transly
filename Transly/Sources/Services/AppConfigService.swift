@@ -1,5 +1,6 @@
 import Foundation
 
+@Observable
 final class AppConfigService {
     static let shared = AppConfigService()
     

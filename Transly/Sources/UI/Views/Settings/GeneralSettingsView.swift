@@ -22,7 +22,7 @@ struct SettingsWindowView: View {
 }
 
 struct GeneralSettingsView: View {
-    @State private var viewModel = SettingsViewModel()
+    @Bindable var config = AppConfigService.shared
     
     var body: some View {
         Form {
@@ -70,19 +70,19 @@ struct GeneralSettingsView: View {
             }
             
             Section("翻译设置") {
-                Picker("默认源语言", selection: $viewModel.sourceLanguage) {
+                Picker("默认源语言", selection: $config.sourceLanguage) {
                     ForEach(Language.sourceLanguages) { language in
                         Text(language.displayName).tag(language)
                     }
                 }
                 
-                Picker("默认目标语言", selection: $viewModel.targetLanguage) {
+                Picker("默认目标语言", selection: $config.targetLanguage) {
                     ForEach(Language.targetLanguages) { language in
                         Text(language.displayName).tag(language)
                     }
                 }
                 
-                Toggle("自动复制翻译结果", isOn: $viewModel.autoCopy)
+                Toggle("自动复制翻译结果", isOn: $config.autoCopy)
             }
         }
         .formStyle(.grouped)
