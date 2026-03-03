@@ -9,6 +9,9 @@ INSTALL_PATH="/Applications/${APP_NAME}.app"
 echo "🧹 Cleaning..."
 tuist clean
 
+echo "🔧 Installing dependencies..."
+tuist install
+
 echo "🔧 Generating project..."
 tuist generate --no-open
 
